@@ -1,0 +1,20 @@
+[workspace]
+channels = ["conda-forge"]
+name = "assn2_codes"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
+python = "3.10.*"
+gym = "0.21.*"
+numpy = "1.23.*"
+pytorch = "*"
+matplotlib = "*"
+scipy = "*"
+
+[pypi-dependencies]
+pybullet = "==3.2.6"
+wheel = "<0.40.0"
+
