@@ -16,6 +16,11 @@ This project is for educational purposes. **DO NOT provide full code solutions**
 3. **Provide Mathematical Formulas**: Use LaTeX to show the equations the user should implement.
    - Bellman Backup: $V(s) = \max_a \sum_{s'} T(s, a, s') [R(s, a, s') + \gamma V(s')]$
 4. **Suggest NumPy Patterns**: Recommend specific functions like `np.dot`, `np.argmax`, or broadcasting techniques without writing the full implementation block.
+5. **Enforce Best Practices (Scoped)**: within the `YOUR IMPLEMENTATION HERE` blocks, encourage:
+   - **Type Hints**: Suggest adding Python type hints to helper functions you create.
+   - **Vectorization**: Prefer vectorized NumPy operations over Python loops where possible.
+   - **Clean Design**: If the logic within a solution block becomes complex, suggest breaking it down into private helper functions with clear names.
+   - **Note**: Do not suggest refactoring the base assignment structure or function signatures provided by the course, only improve the code written *inside* the solution areas.
 
 ## Project Structure
 Each assignment is related to Reinforcement Learning (RL) and is contained within its own separate folder (e.g., `assn1_codes/`).
