@@ -23,7 +23,7 @@ class BasePolicy:
         """
         raise NotImplementedError
 
-    def act(self, observations, return_log_prob = False):
+    def act(self, observations, return_log_prob=False):
         """
         Args:
             observations: np.array of shape [batch size, dim(observation space)]
@@ -35,7 +35,7 @@ class BasePolicy:
         Call self.action_distribution to get the distribution over actions,
         then sample from that distribution. Compute the log probability of
         the sampled actions using self.action_distribution. You will have to
-        convert the actions and log probabilities to a numpy array, via numpy(). 
+        convert the actions and log probabilities to a numpy array, via numpy().
 
         You may find the following documentation helpful:
         https://pytorch.org/docs/stable/distributions.html
@@ -43,6 +43,11 @@ class BasePolicy:
         observations = np2torch(observations)
         #######################################################
         #########   YOUR CODE HERE - 1-4 lines.    ############
+
+        prob_dist = self.action_distribution(observations)  # batch * num_of_actions
+
+        sampled_actions = prob_dist.sample()  # batch, *shape of action
+        log_probs = prob_dist.log_prob(sampled_actions)  # batch
 
         #######################################################
         #########          END YOUR CODE.          ############
@@ -68,7 +73,9 @@ class CategoricalPolicy(BasePolicy, nn.Module):
         """
         #######################################################
         #########   YOUR CODE HERE - 1-2 lines.    ############
+        logits = self.network(observations)  # batch, dim of action space
 
+        distribution = torch.distributions.Categorical(logits=logits)
         #######################################################
         #########          END YOUR CODE.          ############
         return distribution
@@ -86,7 +93,7 @@ class GaussianPolicy(BasePolicy, nn.Module):
         self.network = network
         #######################################################
         #########   YOUR CODE HERE - 1 line.       ############
-
+        self.log_std = torch.zeros(action_dim)  # action_dim
         #######################################################
         #########          END YOUR CODE.          ############
 
@@ -100,7 +107,7 @@ class GaussianPolicy(BasePolicy, nn.Module):
         """
         #######################################################
         #########   YOUR CODE HERE - 1 line.       ############
-
+        std = torch.exp(self.log_std)
         #######################################################
         #########          END YOUR CODE.          ############
         return std
