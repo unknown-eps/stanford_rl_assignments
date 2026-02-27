@@ -47,8 +47,8 @@ class BasePolicy:
         prob_dist = self.action_distribution(observations)  # batch * num_of_actions
 
         sampled_actions = prob_dist.sample()  # batch, *shape of action
-        log_probs = prob_dist.log_prob(sampled_actions)  # batch
-
+        log_probs = prob_dist.log_prob(sampled_actions).detach().cpu().numpy()  # batch
+        sampled_actions = sampled_actions.detach().cpu().numpy()
         #######################################################
         #########          END YOUR CODE.          ############
         if return_log_prob:
@@ -93,7 +93,9 @@ class GaussianPolicy(BasePolicy, nn.Module):
         self.network = network
         #######################################################
         #########   YOUR CODE HERE - 1 line.       ############
-        self.log_std = torch.zeros(action_dim)  # action_dim
+        self.log_std = nn.Parameter(
+            data=torch.zeros(action_dim, dtype=torch.float32), requires_grad=True
+        )  # action_dim
         #######################################################
         #########          END YOUR CODE.          ############
 
@@ -131,7 +133,9 @@ class GaussianPolicy(BasePolicy, nn.Module):
         """
         #######################################################
         #########   YOUR CODE HERE - 2-4 lines.    ############
-
+        mean = self.network(observations)
+        base_dist = torch.distributions.normal.Normal(mean=mean, scale=self.std())
+        distribution = torch.distributions.independent.Independent(base_dist, 1)
         #######################################################
         #########          END YOUR CODE.          ############
         return distribution
