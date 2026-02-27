@@ -26,7 +26,19 @@ def build_mlp(input_size, output_size, n_layers, size):
     """
     #######################################################
     #########   YOUR CODE HERE - 7-15 lines.   ############
+    from collections import OrderedDict
 
+    my_dict = OrderedDict()
+    cur_size = input_size
+    next_size = size
+    for index in range(n_layers):
+        my_dict[f"Linear{index}"] = nn.Linear(cur_size, next_size)
+        my_dict[f"Relu{index}"] = nn.ReLU()
+        index = index + 1
+        cur_size = next_size
+        next_size = size
+    my_dict["Output"] = nn.Linear(size, output_size)
+    return nn.Sequential(my_dict)
     #######################################################
     #########          END YOUR CODE.          ############
 
@@ -41,7 +53,9 @@ def np2torch(x, cast_double_to_float=True):
         2. Move it to the GPU (if CUDA is available)
         3. Optionally casts float64 to float32 (torch is picky about types)
     """
-    assert isinstance(x, np.ndarray), f"np2torch expected 'np.ndarray' but received '{type(x).__name__}'"
+    assert isinstance(x, np.ndarray), (
+        f"np2torch expected 'np.ndarray' but received '{type(x).__name__}'"
+    )
     x = torch.from_numpy(x).to(device)
     if cast_double_to_float and x.dtype is torch.float64:
         x = x.float()
