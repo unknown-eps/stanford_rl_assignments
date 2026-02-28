@@ -21,12 +21,19 @@ class BaselineNetwork(nn.Module):
         super().__init__()
         self.config = config
         self.env = env
-        self.baseline = None
         self.lr = self.config.learning_rate
         observation_dim = self.env.observation_space.shape[0]
 
         #######################################################
         #########   YOUR CODE HERE - 2-8 lines.   #############
+        self.network = build_mlp(
+            input_size=observation_dim,
+            output_size=1,
+            n_layers=self.config.n_layers,
+            size=self.config.layer_size,
+        )
+        self.network.to(device)
+        self.optimizer = torch.optim.Adam(lr=self.lr, params=self.network.parameters())
 
         #######################################################
         #########          END YOUR CODE.          ############
@@ -51,7 +58,7 @@ class BaselineNetwork(nn.Module):
         """
         #######################################################
         #########   YOUR CODE HERE - 1 lines.     #############
-
+        output = self.network(observations).squeeze()
         #######################################################
         #########          END YOUR CODE.          ############
         assert output.ndim == 1
@@ -79,7 +86,9 @@ class BaselineNetwork(nn.Module):
         observations = np2torch(observations)
         #######################################################
         #########   YOUR CODE HERE - 1-4 lines.   ############
-
+        baselines = self.forward(observations)
+        advantages = returns - baselines.detach().cpu().numpy()
+        advantages = advantages
         #######################################################
         #########          END YOUR CODE.          ############
         return advantages
@@ -101,6 +110,11 @@ class BaselineNetwork(nn.Module):
         observations = np2torch(observations)
         #######################################################
         #########   YOUR CODE HERE - 4-10 lines.  #############
-
+        self.optimizer.zero_grad()
+        current_baselines = self.forward(observations)
+        errors = returns - current_baselines
+        loss = (errors**2).mean()
+        loss.backward()
+        self.optimizer.step()
         #######################################################
         #########          END YOUR CODE.          ############
