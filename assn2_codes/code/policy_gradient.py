@@ -234,6 +234,9 @@ class PolicyGradient(object):
         """
         #######################################################
         #########   YOUR CODE HERE - 1-2 lines.    ############
+        normalized_advantages = (advantages - advantages.mean()) / (
+            advantages.std() + 1e-8
+        )
 
         #######################################################
         #########          END YOUR CODE.          ############
@@ -287,7 +290,12 @@ class PolicyGradient(object):
         advantages = np2torch(advantages)
         #######################################################
         #########   YOUR CODE HERE - 5-7 lines.    ############
-
+        self.policy_optimizer.zero_grad()
+        action_dist = self.policy.action_distribution(observations=observations)
+        action_prbs = action_dist.log_prob(actions)
+        loss = -(advantages * action_prbs).mean()
+        loss.backward()
+        self.policy_optimizer.step()
         #######################################################
         #########          END YOUR CODE.          ############
 
