@@ -84,6 +84,7 @@ class PolicyGradient(object):
             self.policy = GaussianPolicy(
                 network=self.policy_nn, action_dim=self.action_dim
             )
+        self.policy.to(device)
         self.policy_optimizer = torch.optim.Adam(
             lr=self.lr, params=self.policy.parameters()
         )
