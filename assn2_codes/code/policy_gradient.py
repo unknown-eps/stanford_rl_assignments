@@ -72,7 +72,21 @@ class PolicyGradient(object):
         """
         #######################################################
         #########   YOUR CODE HERE - 8-12 lines.   ############
-
+        self.policy_nn = build_mlp(
+            input_size=self.observation_dim,
+            output_size=self.action_dim,
+            n_layers=self.config.n_layers,
+            size=self.config.layer_size,
+        )
+        if self.discrete:
+            self.policy = CategoricalPolicy(network=self.policy_nn)
+        else:
+            self.policy = GaussianPolicy(
+                network=self.policy_nn, action_dim=self.action_dim
+            )
+        self.policy_optimizer = torch.optim.Adam(
+            lr=self.lr, params=self.policy.parameters()
+        )
         #######################################################
         #########          END YOUR CODE.          ############
 
@@ -190,6 +204,11 @@ class PolicyGradient(object):
             rewards = path["reward"]
             #######################################################
             #########   YOUR CODE HERE - 5-10 lines.   ############
+            returns = [0] * len(rewards)
+            for time_idx in reversed(range(len(rewards))):
+                returns[time_idx] = rewards[time_idx]
+                if time_idx + 1 < len(rewards):
+                    returns[time_idx] += returns[time_idx + 1] * self.config.gamma
 
             #######################################################
             #########          END YOUR CODE.          ############
@@ -282,13 +301,10 @@ class PolicyGradient(object):
         last_record = 0
 
         self.init_averages()
-        all_total_rewards = (
-            []
-        )  # the returns of all episodes samples for training purposes
+        all_total_rewards = []  # the returns of all episodes samples for training purposes
         averaged_total_rewards = []  # the returns for each iteration
 
         for t in range(self.config.num_batches):
-
             # collect a minibatch of samples
             paths, total_rewards = self.sample_path(self.env)
             all_total_rewards.extend(total_rewards)
