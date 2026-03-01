@@ -8,11 +8,12 @@ version = "0.1.0"
 
 [dependencies]
 python = "3.10.*"
-gym = "0.21.*"
-numpy = "1.23.*"
+gym = "0.21"
+numpy = "1.23.0"
 pytorch = "*"
 matplotlib = "*"
 scipy = "*"
+setuptools = "65.5.0"
 
 [pypi-dependencies]
 pybullet = "==3.2.6"

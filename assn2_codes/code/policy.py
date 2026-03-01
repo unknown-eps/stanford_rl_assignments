@@ -134,7 +134,7 @@ class GaussianPolicy(BasePolicy, nn.Module):
         #######################################################
         #########   YOUR CODE HERE - 2-4 lines.    ############
         mean = self.network(observations)
-        base_dist = torch.distributions.normal.Normal(mean=mean, scale=self.std())
+        base_dist = torch.distributions.normal.Normal(loc=mean, scale=self.std())
         distribution = torch.distributions.independent.Independent(base_dist, 1)
         #######################################################
         #########          END YOUR CODE.          ############
