@@ -11,8 +11,8 @@ from network_utils import build_mlp, device, np2torch
 from policy import CategoricalPolicy, GaussianPolicy
 from policy_gradient import PolicyGradient
 
-class PPO(PolicyGradient):
 
+class PPO(PolicyGradient):
     def __init__(self, env, config, seed, logger=None):
         config.use_baseline = True
         super(PPO, self).__init__(env, config, seed, logger)
@@ -47,7 +47,21 @@ class PPO(PolicyGradient):
 
         #######################################################
         #########   YOUR CODE HERE - 10-15 lines.   ###########
-
+        cur_dist = self.policy.action_distribution(observations)
+        new_logprobs = cur_dist.log_prob(actions)
+        log_ratios = new_logprobs - old_logprobs
+        z_ratios = torch.exp(log_ratios)
+        eps = self.config.eps_clip
+        clipped_z_ratios = torch.clip(
+            input=z_ratios, min=1 - eps, max=1 + eps
+        ).squeeze()
+        second_term = clipped_z_ratios * advantages.squeeze()
+        first_term = z_ratios * advantages.squeeze()
+        loss = -torch.minimum(first_term, second_term)
+        loss = loss.mean()
+        self.policy_optimizer.zero_grad()
+        loss.backward()
+        self.policy_optimizer.step()
         #######################################################
         #########          END YOUR CODE.          ############
 
@@ -61,13 +75,10 @@ class PPO(PolicyGradient):
         last_record = 0
 
         self.init_averages()
-        all_total_rewards = (
-            []
-        )  # the returns of all episodes samples for training purposes
+        all_total_rewards = []  # the returns of all episodes samples for training purposes
         averaged_total_rewards = []  # the returns for each iteration
 
         for t in range(self.config.num_batches):
-
             # collect a minibatch of samples
             paths, total_rewards = self.sample_path(self.env)
             all_total_rewards.extend(total_rewards)
@@ -83,8 +94,7 @@ class PPO(PolicyGradient):
             # run training operations
             for k in range(self.config.update_freq):
                 self.baseline_network.update_baseline(returns, observations)
-                self.update_policy(observations, actions, advantages, 
-                                   old_logprobs)
+                self.update_policy(observations, actions, advantages, old_logprobs)
 
             # logging
             if t % self.config.summary_freq == 0:
@@ -95,7 +105,7 @@ class PPO(PolicyGradient):
             avg_reward = np.mean(total_rewards)
             sigma_reward = np.sqrt(np.var(total_rewards) / len(total_rewards))
             msg = "[ITERATION {}]: Average reward: {:04.2f} +/- {:04.2f}".format(
-                    t, avg_reward, sigma_reward
+                t, avg_reward, sigma_reward
             )
             averaged_total_rewards.append(avg_reward)
             self.logger.info(msg)
@@ -136,7 +146,7 @@ class PPO(PolicyGradient):
         and generating batches to train on.
         """
         episode = 0
-        episode_rewards = [] 
+        episode_rewards = []
         paths = []
         t = 0
 
@@ -149,7 +159,9 @@ class PPO(PolicyGradient):
                 states.append(state)
                 # Note the difference between this line and the corresponding line
                 # in PolicyGradient.
-                action, old_logprob = self.policy.act(states[-1][None], return_log_prob = True)
+                action, old_logprob = self.policy.act(
+                    states[-1][None], return_log_prob=True
+                )
                 assert old_logprob.shape == (1,)
                 action, old_logprob = action[0], old_logprob[0]
                 state, reward, done, info = env.step(action)
@@ -168,7 +180,7 @@ class PPO(PolicyGradient):
                 "observation": np.array(states),
                 "reward": np.array(rewards),
                 "action": np.array(actions),
-                "old_logprobs": np.array(old_logprobs)
+                "old_logprobs": np.array(old_logprobs),
             }
             paths.append(path)
             episode += 1
